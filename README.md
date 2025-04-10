@@ -17,7 +17,7 @@ A Tampermonkey userscript that blocks unnecessary elements on CivitAI to improve
 ## Installation ⚡
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) (Chrome/Firefox/Edge/Safari)
-2. Copy the script into you tampermonkey add-on 
+2. Copy the script into your tampermonkey add-on 
 3. Refresh CivitAI pages to see the changes
 
 ## What It Blocks 🚮
