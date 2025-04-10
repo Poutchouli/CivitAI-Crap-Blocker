@@ -2,7 +2,7 @@
 
 A Tampermonkey userscript that blocks unnecessary elements on CivitAI to improve performance and reduce bandwidth/RAM usage.
 
-[![GitHub license](https://img.shields.io/github/license/yourusername/civitai-crap-blocker)](https://github.com/yourusername/civitai-crap-blocker/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/Poutchouli/civitai-crap-blocker)](https://github.com/Poutchouli/civitai-crap-blocker/blob/main/LICENSE)
 ![Tampermonkey](https://img.shields.io/badge/Tampermonkey-supported-brightgreen)
 
 ## Features ✨
