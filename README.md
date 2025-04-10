@@ -19,7 +19,7 @@ BEFORE:
 AFTER:
 ![image](https://github.com/user-attachments/assets/73f47891-2f1d-40c3-b670-ead9fabcec8d)
 
-WEBUSAGE (loading the front page):
+WEBUSAGE (loading the front page)
 BEFORE:
 ![image](https://github.com/user-attachments/assets/93dcfe71-757e-46f1-986e-04d0e5f7bb0c)
 
