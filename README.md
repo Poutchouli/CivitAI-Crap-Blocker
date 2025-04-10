@@ -22,11 +22,11 @@ AFTER:
 WEBUSAGE (loading the front page)
 
 BEFORE:
-
+13sec load with 92mb
 ![image](https://github.com/user-attachments/assets/93dcfe71-757e-46f1-986e-04d0e5f7bb0c)
 
 AFTER:
-
+1.2sec load with 27mb
 ![image](https://github.com/user-attachments/assets/026183b3-bb92-4784-a2be-4c0cd827a3ef)
 
 ## Installation ⚡
