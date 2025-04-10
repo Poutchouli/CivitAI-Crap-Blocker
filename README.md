@@ -6,8 +6,8 @@ A Violentmonkey/Tampermonkey userscript that blocks unnecessary elements on Civi
 
 ## Features ✨
 
-- Blocks avatar images and decorative elements
-- Prevents poster/preview elements from loading
+- Blocks avatar images and badges (some users avatars and badges are +20mb to be displayed in 64x64p)
+- Prevents image outlines/previews from loading
 - Replaces blocked elements with lightweight placeholders
 - Handles dynamically loaded content
 - Preserves page layout while removing bloat
