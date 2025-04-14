@@ -74,12 +74,19 @@ Drag and drop the zip file on your Chrome window
 - Initial public release
 - Basic element blocking functionality
 
-**v2.09** - 2025-04-15
+**v2.09** - 2025-04-14
 - Fixed React hydration errors by avoiding DOM removal
 - Now hides elements instead of deleting them (safer for React)
 - Processes elements in batches for better performance
 - Smarter MutationObserver that ignores unnecessary changes
 - 2-second startup delay to prevent conflicts
+
+**v3.00** - 2025-04-15
+- Complete rewrite from scratch
+- Actually prevents resource loading
+- No more site crashes
+- Covers all resource types
+- Lightweight and efficient
 
 ## License 📄
 
