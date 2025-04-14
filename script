@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         CivitAI Resource Blocker
+// @name         CivitAI Resource Blocker + Cosmetic Cleaner
 // @namespace    Violentmonkey Scripts
-// @version      3.0
-// @description  ACTUALLY blocks unwanted resources from loading
+// @version      3.3
+// @description  Blocks unwanted resources and removes cosmetic effects
 // @author       Poochilli, ringyring
 // @match        https://civitai.com/*
 // @grant        none
@@ -27,7 +27,7 @@
 
     // Main blocking function
     function blockUnwantedResources() {
-        // Block new image/video elements
+        // Block images/videos
         document.querySelectorAll('img, video').forEach(el => {
             const src = el.src || el.currentSrc || el.getAttribute('src') || '';
             const shouldBlock = BLOCK_LIST.some(pattern => src.includes(pattern)) ||
@@ -41,7 +41,6 @@
                 el.removeAttribute('src');
                 el.style.display = 'none';
 
-                // Create a tiny transparent pixel as fallback
                 if (el.tagName === 'IMG') {
                     el.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
                 }
@@ -54,6 +53,13 @@
             if (bgImage && BLOCK_LIST.some(pattern => bgImage.includes(pattern))) {
                 el.style.backgroundImage = 'none';
             }
+        });
+
+        // Remove all gradient effects
+        document.querySelectorAll('[style*="--bgGradient"]').forEach(el => {
+            el.style.removeProperty('--bgGradient');
+            el.style.backgroundImage = 'none';
+            el.style.boxShadow = 'none';
         });
     }
 
