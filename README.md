@@ -80,7 +80,6 @@ Drag and drop the zip file on your Chrome window
 - Processes elements in batches for better performance
 - Smarter MutationObserver that ignores unnecessary changes
 - 2-second startup delay to prevent conflicts
-- (Previous: v2.08 - Initial blocking logic with aggressive DOM removal)
 
 ## License 📄
 
