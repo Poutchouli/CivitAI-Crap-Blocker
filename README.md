@@ -70,9 +70,17 @@ Drag and drop the zip file on your Chrome window
 
 ## Changelog 📜
 
-**v2.08** - 2023-11-10
+**v2.08** - 2025-04-10
 - Initial public release
 - Basic element blocking functionality
+
+**v2.09** - 2025-04-15
+Fixed React hydration errors by avoiding DOM removal
+Now hides elements instead of deleting them (safer for React)
+Processes elements in batches for better performance
+Smarter MutationObserver that ignores unnecessary changes
+2-second startup delay to prevent conflicts
+(Previous: v2.08 - Initial blocking logic with aggressive DOM removal)
 
 ## License 📄
 
