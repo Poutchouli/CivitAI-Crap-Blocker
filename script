@@ -1,118 +1,114 @@
 // ==UserScript==
 // @name         CivitAI Crap Blocker del
-// @namespace    http://tampermonkey.net/
-// @version      2.08
+// @namespace    Violentmonkey Scripts
+// @version      2.09
 // @description  Blocks specific elements that load like crap and prevents them from consuming bandwidth and RAM
 // @author       Poochilli, ringyring
 // @match        https://civitai.com/*
 // @grant        none
 // ==/UserScript==
- 
+
 (function () {
     'use strict';
- 
-    // Function to prevent targeted elements from loading
-    function preventElementsFromLoading() {
-        document.querySelectorAll('img, div, span, video').forEach(el => {
-            const classList = Array.from(el.classList);
- 
-            if (
-                (el.tagName === 'IMG' && el.alt && el.alt.toLowerCase().includes('avatar')) || // Block images with "avatar" in alt text
-                (el.title && el.title.toLowerCase().includes('avatar')) || // Block elements with "avatar" in the title attribute
-                (el.tagName === 'IMG' && el.src && el.src.toLowerCase().includes('avatar')) || // Block images with "avatar" in src
-                (el.tagName === 'IMG' && el.width === 144 && el.height === 144) || // Block images with exact size of 144x144
-                (classList.includes('-translate-x-1/2')) || // Block elements with "-translate-x-1/2"
-                (el.offsetWidth === 28 && el.offsetHeight === 28 && classList.includes('EdgeImage_image__iH4_q')) || // Block specific small images
-                (el.offsetWidth === 20 && el.offsetHeight === 20 && classList.includes('EdgeImage_image__iH4_q')) || // Block specific small images
-                (classList.some(cls => cls.toLowerCase().includes('poster'))) || // Block elements with "poster" in class name
-                (Object.values(el.attributes).some(attr => attr.value.toLowerCase().includes('poster'))) // Block elements with "poster" in any attribute
-            ) {
-                // Skip placeholder creation for specific cases
-                if (
-                    classList.includes('EdgeImage_image__iH4_q') &&
-                    el.tagName === 'IMG' &&
-                    el.src && el.src.endsWith('user_avatar_decoration.jpeg')
-                ) {
-                    el.remove(); // Remove the element without a placeholder
-                    return; // Skip the rest of the loop for this element
-                }
- 
-                // Prevent images/videos from loading
-                if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
-                    el.removeAttribute('src'); // Remove src to prevent loading
-                    el.setAttribute('data-src', ''); // Optional: Store src in data-src for later use
-                }
- 
-                // Replace the element with a transparent placeholder to preserve layout
-                const placeholder = document.createElement('div');
-                placeholder.style.width = el.offsetWidth + 'px';
-                placeholder.style.height = el.offsetHeight + 'px';
-                placeholder.style.pointerEvents = 'none'; // Ensure the placeholder doesn't block interactions
- 
-                // Hide the placeholder if it matches the exact style
-                if (
-                    placeholder.style.width === '49px' &&
-                    placeholder.style.height === '49px' &&
-                    placeholder.style.pointerEvents === 'none'
-                ) {
-                    placeholder.style.display = 'none'; // Hide the placeholder
-                }
-                 // Hide the placeholder if it matches the exact style
-                if (
-                    placeholder.style.width === '42px' &&
-                    placeholder.style.height === '42px' &&
-                    placeholder.style.pointerEvents === 'none'
-                ) {
-                    placeholder.style.display = 'none'; // Hide the placeholder
-                }
-                                 // Hide the placeholder if it matches the exact style
-                if (
-                    placeholder.style.width === '28px' &&
-                    placeholder.style.height === '108px' &&
-                    placeholder.style.pointerEvents === 'none'
-                ) {
-                    placeholder.style.display = 'none'; // Hide the placeholder
-                }
-                                 // Hide the placeholder if it matches the exact style
-                if (
-                    placeholder.style.width === '28px' &&
-                    placeholder.style.height === '90px' &&
-                    placeholder.style.pointerEvents === 'none'
-                ) {
-                    placeholder.style.display = 'none'; // Hide the placeholder
-                }
-                                 // Hide the placeholder if it matches the exact style
-                if (
-                    placeholder.style.width === '28px' &&
-                    placeholder.style.height === '71px' &&
-                    placeholder.style.pointerEvents === 'none'
-                ) {
-                    placeholder.style.display = 'none'; // Hide the placeholder
-                }
-                                  // Hide the placeholder if it matches the exact style
-                if (
-                    placeholder.style.width === '40px' &&
-                    placeholder.style.height === '40px' &&
-                    placeholder.style.pointerEvents === 'none'
-                ) {
-                    placeholder.style.display = 'none'; // Hide the placeholder
-                }
- 
- 
-                el.parentNode.replaceChild(placeholder, el);
-            }
- 
-            // Replace class of divs starting with "CosmeticWrapper_wrapper"
-            if (el.tagName === 'DIV' && classList.some(cls => cls.startsWith('CosmeticWrapper_wrapper'))) {
-                el.className = 'relative flex overflow-hidden rounded-md border-gray-3 bg-gray-0 shadow-gray-4 dark:border-dark-4 dark:bg-dark-6 dark:shadow-dark-8 flex-col';
-            }
-        });
+
+    // Function to safely remove or modify elements
+    function safelyModifyElements() {
+        // Use requestIdleCallback to avoid blocking the main thread
+        if (window.requestIdleCallback) {
+            requestIdleCallback(processElements);
+        } else {
+            setTimeout(processElements, 500);
+        }
     }
- 
-    // Observe changes and prevent elements from loading dynamically
-    const observer = new MutationObserver(preventElementsFromLoading);
-    observer.observe(document.body, { childList: true, subtree: true });
- 
-    // Initial prevention in case elements already exist
-    preventElementsFromLoading();
+
+    function processElements() {
+        // Get all elements but process them in small batches
+        const elements = document.querySelectorAll('img, div, span, video');
+        const batchSize = 50;
+        let index = 0;
+
+        function processBatch() {
+            const batchEnd = Math.min(index + batchSize, elements.length);
+            for (; index < batchEnd; index++) {
+                const el = elements[index];
+                if (!el.isConnected) continue; // Skip if element is no longer in DOM
+
+                const classList = Array.from(el.classList);
+                const shouldBlock = (
+                    (el.tagName === 'IMG' && el.alt && el.alt.toLowerCase().includes('avatar')) ||
+                    (el.title && el.title.toLowerCase().includes('avatar')) ||
+                    (el.tagName === 'IMG' && el.src && el.src.toLowerCase().includes('avatar')) ||
+                    (el.tagName === 'IMG' && el.width === 144 && el.height === 144) ||
+                    (classList.includes('-translate-x-1/2')) ||
+                    (el.offsetWidth === 28 && el.offsetHeight === 28 && classList.includes('EdgeImage_image__iH4_q')) ||
+                    (el.offsetWidth === 20 && el.offsetHeight === 20 && classList.includes('EdgeImage_image__iH4_q')) ||
+                    (classList.some(cls => cls.toLowerCase().includes('poster'))) ||
+                    (Object.values(el.attributes).some(attr => attr.value.toLowerCase().includes('poster')))
+                );
+
+                if (shouldBlock) {
+                    // Skip placeholder creation for specific cases
+                    if (
+                        classList.includes('EdgeImage_image__iH4_q') &&
+                        el.tagName === 'IMG' &&
+                        el.src && el.src.endsWith('user_avatar_decoration.jpeg')
+                    ) {
+                        el.style.display = 'none'; // Hide instead of remove
+                        continue;
+                    }
+
+                    // Prevent images/videos from loading
+                    if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
+                        el.style.visibility = 'hidden'; // Hide instead of removing src
+                        el.style.position = 'absolute'; // Take out of layout flow
+                    }
+
+                    // For other elements, hide them rather than replacing
+                    el.style.display = 'none';
+                }
+
+                // Replace class of divs starting with "CosmeticWrapper_wrapper"
+                if (el.tagName === 'DIV' && classList.some(cls => cls.startsWith('CosmeticWrapper_wrapper'))) {
+                    // Add class instead of replacing to avoid breaking React references
+                    el.classList.add('relative', 'flex', 'overflow-hidden', 'rounded-md', 'border-gray-3', 'bg-gray-0', 'shadow-gray-4', 'dark:border-dark-4', 'dark:bg-dark-6', 'dark:shadow-dark-8', 'flex-col');
+                }
+            }
+
+            if (index < elements.length) {
+                if (window.requestIdleCallback) {
+                    requestIdleCallback(processBatch);
+                } else {
+                    setTimeout(processBatch, 50);
+                }
+            }
+        }
+
+        processBatch();
+    }
+
+    // Observe changes with more conservative settings
+    const observer = new MutationObserver((mutations) => {
+        // Only process if we find relevant elements
+        const hasRelevantChanges = mutations.some(mutation => {
+            return Array.from(mutation.addedNodes).some(node => {
+                return node.nodeType === 1 && // ELEMENT_NODE
+                    (node.matches('img, div, span, video') ||
+                     node.querySelector('img, div, span, video'));
+            });
+        });
+
+        if (hasRelevantChanges) {
+            safelyModifyElements();
+        }
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: false, // Don't observe attribute changes
+        characterData: false // Don't observe text changes
+    });
+
+    // Initial processing after a delay to let React hydrate
+    setTimeout(safelyModifyElements, 2000);
 })();
