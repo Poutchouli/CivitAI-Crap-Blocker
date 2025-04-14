@@ -3,7 +3,7 @@
 // @namespace    Violentmonkey Scripts
 // @version      3.3
 // @description  Blocks unwanted resources and removes cosmetic effects
-// @author       Poochilli, ringyring
+// @author       Poochilli
 // @match        https://civitai.com/*
 // @grant        none
 // @run-at       document-start
