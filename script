@@ -1,114 +1,95 @@
 // ==UserScript==
-// @name         CivitAI Crap Blocker del
+// @name         CivitAI Resource Blocker
 // @namespace    Violentmonkey Scripts
-// @version      2.09
-// @description  Blocks specific elements that load like crap and prevents them from consuming bandwidth and RAM
+// @version      3.0
+// @description  ACTUALLY blocks unwanted resources from loading
 // @author       Poochilli, ringyring
 // @match        https://civitai.com/*
 // @grant        none
+// @run-at       document-start
 // ==/UserScript==
 
-(function () {
+(function() {
     'use strict';
 
-    // Function to safely remove or modify elements
-    function safelyModifyElements() {
-        // Use requestIdleCallback to avoid blocking the main thread
-        if (window.requestIdleCallback) {
-            requestIdleCallback(processElements);
-        } else {
-            setTimeout(processElements, 500);
-        }
-    }
+    // Block these URL patterns
+    const BLOCK_LIST = [
+        'avatar',
+        'poster',
+        'decoration',
+        '_144x144',
+        '_small',
+        '/badges/',
+        '/user/',
+        'thumbnails',
+        'previews'
+    ];
 
-    function processElements() {
-        // Get all elements but process them in small batches
-        const elements = document.querySelectorAll('img, div, span, video');
-        const batchSize = 50;
-        let index = 0;
+    // Main blocking function
+    function blockUnwantedResources() {
+        // Block new image/video elements
+        document.querySelectorAll('img, video').forEach(el => {
+            const src = el.src || el.currentSrc || el.getAttribute('src') || '';
+            const shouldBlock = BLOCK_LIST.some(pattern => src.includes(pattern)) ||
+                              (el.width === 144 && el.height === 144) ||
+                              el.alt?.toLowerCase().includes('avatar');
 
-        function processBatch() {
-            const batchEnd = Math.min(index + batchSize, elements.length);
-            for (; index < batchEnd; index++) {
-                const el = elements[index];
-                if (!el.isConnected) continue; // Skip if element is no longer in DOM
+            if (shouldBlock && !el.dataset.blocked) {
+                el.dataset.blocked = 'true';
+                el.src = '';
+                el.srcset = '';
+                el.removeAttribute('src');
+                el.style.display = 'none';
 
-                const classList = Array.from(el.classList);
-                const shouldBlock = (
-                    (el.tagName === 'IMG' && el.alt && el.alt.toLowerCase().includes('avatar')) ||
-                    (el.title && el.title.toLowerCase().includes('avatar')) ||
-                    (el.tagName === 'IMG' && el.src && el.src.toLowerCase().includes('avatar')) ||
-                    (el.tagName === 'IMG' && el.width === 144 && el.height === 144) ||
-                    (classList.includes('-translate-x-1/2')) ||
-                    (el.offsetWidth === 28 && el.offsetHeight === 28 && classList.includes('EdgeImage_image__iH4_q')) ||
-                    (el.offsetWidth === 20 && el.offsetHeight === 20 && classList.includes('EdgeImage_image__iH4_q')) ||
-                    (classList.some(cls => cls.toLowerCase().includes('poster'))) ||
-                    (Object.values(el.attributes).some(attr => attr.value.toLowerCase().includes('poster')))
-                );
-
-                if (shouldBlock) {
-                    // Skip placeholder creation for specific cases
-                    if (
-                        classList.includes('EdgeImage_image__iH4_q') &&
-                        el.tagName === 'IMG' &&
-                        el.src && el.src.endsWith('user_avatar_decoration.jpeg')
-                    ) {
-                        el.style.display = 'none'; // Hide instead of remove
-                        continue;
-                    }
-
-                    // Prevent images/videos from loading
-                    if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
-                        el.style.visibility = 'hidden'; // Hide instead of removing src
-                        el.style.position = 'absolute'; // Take out of layout flow
-                    }
-
-                    // For other elements, hide them rather than replacing
-                    el.style.display = 'none';
-                }
-
-                // Replace class of divs starting with "CosmeticWrapper_wrapper"
-                if (el.tagName === 'DIV' && classList.some(cls => cls.startsWith('CosmeticWrapper_wrapper'))) {
-                    // Add class instead of replacing to avoid breaking React references
-                    el.classList.add('relative', 'flex', 'overflow-hidden', 'rounded-md', 'border-gray-3', 'bg-gray-0', 'shadow-gray-4', 'dark:border-dark-4', 'dark:bg-dark-6', 'dark:shadow-dark-8', 'flex-col');
+                // Create a tiny transparent pixel as fallback
+                if (el.tagName === 'IMG') {
+                    el.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
                 }
             }
-
-            if (index < elements.length) {
-                if (window.requestIdleCallback) {
-                    requestIdleCallback(processBatch);
-                } else {
-                    setTimeout(processBatch, 50);
-                }
-            }
-        }
-
-        processBatch();
-    }
-
-    // Observe changes with more conservative settings
-    const observer = new MutationObserver((mutations) => {
-        // Only process if we find relevant elements
-        const hasRelevantChanges = mutations.some(mutation => {
-            return Array.from(mutation.addedNodes).some(node => {
-                return node.nodeType === 1 && // ELEMENT_NODE
-                    (node.matches('img, div, span, video') ||
-                     node.querySelector('img, div, span, video'));
-            });
         });
 
-        if (hasRelevantChanges) {
-            safelyModifyElements();
-        }
-    });
+        // Block background images
+        document.querySelectorAll('[style*="background-image"]').forEach(el => {
+            const bgImage = el.style.backgroundImage;
+            if (bgImage && BLOCK_LIST.some(pattern => bgImage.includes(pattern))) {
+                el.style.backgroundImage = 'none';
+            }
+        });
+    }
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: false, // Don't observe attribute changes
-        characterData: false // Don't observe text changes
-    });
+    // Initialize the blocker
+    function initBlocker() {
+        // Run immediately
+        blockUnwantedResources();
 
-    // Initial processing after a delay to let React hydrate
-    setTimeout(safelyModifyElements, 2000);
+        // Run periodically to catch new elements
+        const interval = setInterval(blockUnwantedResources, 1000);
+
+        // Stop when page unloads
+        window.addEventListener('beforeunload', () => {
+            clearInterval(interval);
+        });
+
+        // MutationObserver for dynamic content
+        const observer = new MutationObserver(mutations => {
+            for (const mutation of mutations) {
+                if (mutation.addedNodes.length) {
+                    blockUnwantedResources();
+                    break;
+                }
+            }
+        });
+
+        observer.observe(document, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    // Start the blocker when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBlocker);
+    } else {
+        setTimeout(initBlocker, 100);
+    }
 })();
