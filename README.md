@@ -90,4 +90,4 @@ Drag and drop the zip file on your Chrome window
 
 ## License 📄
 
-MIT © [Poutchouli](https://github.com/Poutchouli)
+GNU GPLv3 © [Poutchouli](https://github.com/Poutchouli)
