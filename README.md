@@ -42,6 +42,9 @@ Option2
 3. Copy the script into your new tampermonkey script 
 4. Refresh CivitAI pages to see the changes
 
+Option3
+1. Import it from [Greasyfork]([https://www.tampermonkey.net/](https://greasyfork.org/en/scripts/535828-civitai-crap-blocker)) (Chrome/Firefox/Edge/Safari)
+
 ## Need help to add the extension (Chrome) ?
 Install from an Unpacked Folder (ZIP)
 Download the Extension as a ZIP:
